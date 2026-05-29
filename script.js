@@ -84,12 +84,12 @@
     btn.disabled = true;
     btn.classList.add('loading');
  
-    try {
-      const res = await fetch(WEBHOOK_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
+    // try {
+    //   const res = await fetch(WEBHOOK_URL, {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify(data),
+    //   });
  
       if (res.ok) {
         form.reset();
