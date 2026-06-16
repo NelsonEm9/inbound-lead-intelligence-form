@@ -12,98 +12,118 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    body { background: #f7f9fc; }
+    body { background: #f3f4f6; }
+    .glass {
+      backdrop-filter: blur(12px);
+      background: rgba(255, 255, 255, 0.65);
+    }
   </style>
 </head>
 
-<body class="p-6">
+<body class="min-h-screen">
 
-  <!-- HEADER -->
-  <header class="bg-white shadow-sm rounded-lg p-6 mb-8 flex justify-between items-center">
-    <div>
-      <h1 class="text-3xl font-bold text-gray-800">Lead Analytics Dashboard</h1>
-      <p class="text-gray-500">Powered by n8n + Google Sheets</p>
+  <!-- NAVBAR -->
+  <nav class="glass shadow-lg px-8 py-4 flex justify-between items-center sticky top-0 z-50">
+    <h1 class="text-2xl font-bold text-gray-800">Inbound Lead Intelligence</h1>
+    <div class="flex gap-6 text-gray-600 font-medium">
+      <a href="../index.html" class="hover:text-gray-900">Form</a>
+      <a href="#" class="text-gray-900 font-semibold">Dashboard</a>
+      <a href="../docs/" class="hover:text-gray-900">Docs</a>
     </div>
-  </header>
+  </nav>
 
-  <!-- KPI CARDS -->
-  <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white p-6 rounded-lg shadow">
-      <p class="text-gray-500 text-sm uppercase">Total Leads</p>
-      <h2 id="kpi-total" class="text-3xl font-bold text-gray-800">0</h2>
-    </div>
+  <main class="p-8 max-w-7xl mx-auto">
 
-    <div class="bg-white p-6 rounded-lg shadow">
-      <p class="text-gray-500 text-sm uppercase">Qualified</p>
-      <h2 id="kpi-qualified" class="text-3xl font-bold text-green-600">0</h2>
-    </div>
+    <!-- HEADER -->
+    <header class="mb-10">
+      <h2 class="text-4xl font-extrabold text-gray-900">Analytics Dashboard</h2>
+      <p class="text-gray-500 mt-1">Real‑time insights powered by n8n + Google Sheets</p>
+      <p id="last-updated" class="text-gray-400 text-sm mt-1"></p>
+    </header>
 
-    <div class="bg-white p-6 rounded-lg shadow">
-      <p class="text-gray-500 text-sm uppercase">Disqualified</p>
-      <h2 id="kpi-disqualified" class="text-3xl font-bold text-red-600">0</h2>
-    </div>
+    <!-- KPI CARDS -->
+    <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+      <div class="glass p-6 rounded-2xl shadow-lg">
+        <p class="text-gray-500 text-sm uppercase">Total Leads</p>
+        <h2 id="kpi-total" class="text-4xl font-bold text-gray-900 mt-1">0</h2>
+      </div>
 
-    <div class="bg-white p-6 rounded-lg shadow">
-      <p class="text-gray-500 text-sm uppercase">Conversion Rate</p>
-      <h2 id="kpi-conversion" class="text-3xl font-bold text-blue-600">0%</h2>
-    </div>
-  </section>
+      <div class="glass p-6 rounded-2xl shadow-lg">
+        <p class="text-gray-500 text-sm uppercase">Qualified</p>
+        <h2 id="kpi-qualified" class="text-4xl font-bold text-green-600 mt-1">0</h2>
+      </div>
 
-  <!-- CHARTS GRID -->
-  <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="glass p-6 rounded-2xl shadow-lg">
+        <p class="text-gray-500 text-sm uppercase">Disqualified</p>
+        <h2 id="kpi-disqualified" class="text-4xl font-bold text-red-600 mt-1">0</h2>
+      </div>
 
-    <!-- Leads Over Time -->
-    <div class="bg-white p-6 rounded-lg shadow col-span-2">
-      <h3 class="text-lg font-semibold mb-4">Leads Over Time</h3>
-      <canvas id="chartLeadsOverTime"></canvas>
-    </div>
+      <div class="glass p-6 rounded-2xl shadow-lg">
+        <p class="text-gray-500 text-sm uppercase">Conversion Rate</p>
+        <h2 id="kpi-conversion" class="text-4xl font-bold text-blue-600 mt-1">0%</h2>
+      </div>
+    </section>
 
-    <!-- Status Breakdown -->
-    <div class="bg-white p-6 rounded-lg shadow">
-      <h3 class="text-lg font-semibold mb-4">Status Breakdown</h3>
-      <canvas id="chartStatus"></canvas>
-    </div>
+    <!-- CHARTS GRID -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-10">
 
-    <!-- Score Distribution -->
-    <div class="bg-white p-6 rounded-lg shadow col-span-3">
-      <h3 class="text-lg font-semibold mb-4">Score Distribution</h3>
-      <canvas id="chartScore"></canvas>
-    </div>
+      <!-- Leads Over Time -->
+      <div class="glass p-6 rounded-2xl shadow-lg col-span-2">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Leads Over Time</h3>
+        <canvas id="chartLeadsOverTime"></canvas>
+      </div>
 
-  </section>
+      <!-- Status Breakdown -->
+      <div class="glass p-6 rounded-2xl shadow-lg">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Status Breakdown</h3>
+        <canvas id="chartStatus"></canvas>
+      </div>
 
-  <!-- TABLE -->
-  <section class="bg-white p-6 rounded-lg shadow mt-8">
-    <h3 class="text-lg font-semibold mb-4">Recent Leads</h3>
-    <table class="w-full text-left">
-      <thead>
-        <tr class="border-b">
-          <th class="py-2">Email</th>
-          <th class="py-2">Score</th>
-          <th class="py-2">Status</th>
-          <th class="py-2">Created At</th>
-        </tr>
-      </thead>
-      <tbody id="table-leads"></tbody>
-    </table>
-  </section>
+      <!-- Score Distribution -->
+      <div class="glass p-6 rounded-2xl shadow-lg col-span-3">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Score Distribution</h3>
+        <canvas id="chartScore"></canvas>
+      </div>
+
+    </section>
+
+    <!-- TABLE -->
+    <section class="glass p-6 rounded-2xl shadow-lg mt-12">
+      <h3 class="text-xl font-semibold mb-4 text-gray-800">Recent Leads</h3>
+      <table class="w-full text-left">
+        <thead>
+          <tr class="border-b text-gray-600">
+            <th class="py-2">Email</th>
+            <th class="py-2">Score</th>
+            <th class="py-2">Status</th>
+            <th class="py-2">Created At</th>
+          </tr>
+        </thead>
+        <tbody id="table-leads" class="text-gray-800"></tbody>
+      </table>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="text-center text-gray-500 py-6 text-sm">
+    Built by Nelson • Powered by n8n + GitHub Pages
+  </footer>
 
   <!-- JS LOGIC -->
   <script>
-    // TODO: Replace with your published Google Sheet CSV URL
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1S2vSmu5ynJUzQRggSaSUIHQ2zUVx1YZBnL3rIcx565I/export?format=csv
-";
+    const SHEET_URL =
+      "https://docs.google.com/spreadsheets/d/1S2vSmu5ynJUzQRggSaSUIHQ2zUVx1YZBnL3rIcx565I/export?format=csv";
 
     async function loadData() {
-      const res = await fetch(https://docs.google.com/spreadsheets/d/1S2vSmu5ynJUzQRggSaSUIHQ2zUVx1YZBnL3rIcx565I/export?format=csv
-);
+      const res = await fetch(SHEET_URL);
       const text = await res.text();
       const rows = text.split("\n").map(r => r.split(","));
 
-      const headers = rows[0];
+      const headers = rows[0].map(h => h.trim().toLowerCase());
       const data = rows.slice(1).map(r => {
         let obj = {};
-        headers.forEach((h, i) => obj[h.trim()] = r[i]);
+        headers.forEach((h, i) => obj[h] = r[i]);
         return obj;
       });
 
@@ -111,10 +131,12 @@
     }
 
     loadData().then(data => {
-      // KPIs
+      document.getElementById("last-updated").textContent =
+        "Last updated: " + new Date().toLocaleString();
+
       const total = data.length;
-      const qualified = data.filter(d => d.status === "qualified").length;
-      const disqualified = data.filter(d => d.status === "disqualified").length;
+      const qualified = data.filter(d => d.status?.toLowerCase() === "qualified").length;
+      const disqualified = data.filter(d => d.status?.toLowerCase() === "disqualified").length;
       const conversion = total ? ((qualified / total) * 100).toFixed(1) : 0;
 
       document.getElementById("kpi-total").textContent = total;
@@ -122,7 +144,6 @@
       document.getElementById("kpi-disqualified").textContent = disqualified;
       document.getElementById("kpi-conversion").textContent = conversion + "%";
 
-      // Leads Over Time
       const byDate = {};
       data.forEach(d => {
         const date = d.created_at?.split(" ")[0];
@@ -137,28 +158,30 @@
           datasets: [{
             label: "Leads",
             data: Object.values(byDate),
-            borderColor: "#3B82F6",
-            tension: 0.3
+            borderColor: "#2563eb",
+            backgroundColor: "rgba(37, 99, 235, 0.2)",
+            tension: 0.4,
+            borderWidth: 3
           }]
         }
       });
 
-      // Status Breakdown
       const statuses = ["new", "contacted", "qualified", "disqualified"];
-      const statusCounts = statuses.map(s => data.filter(d => d.status === s).length);
+      const statusCounts = statuses.map(s =>
+        data.filter(d => d.status?.toLowerCase() === s).length
+      );
 
       new Chart(document.getElementById("chartStatus"), {
-        type: "pie",
+        type: "doughnut",
         data: {
           labels: statuses,
           datasets: [{
             data: statusCounts,
-            backgroundColor: ["#3B82F6", "#F59E0B", "#10B981", "#EF4444"]
+            backgroundColor: ["#3b82f6", "#f59e0b", "#10b981", "#ef4444"]
           }]
         }
       });
 
-      // Score Distribution
       new Chart(document.getElementById("chartScore"), {
         type: "bar",
         data: {
@@ -166,12 +189,11 @@
           datasets: [{
             label: "Score",
             data: data.map(d => d.score),
-            backgroundColor: "#6366F1"
+            backgroundColor: "#6366f1"
           }]
         }
       });
 
-      // Table
       const table = document.getElementById("table-leads");
       data.slice(-20).reverse().forEach(d => {
         table.innerHTML += `
