@@ -91,10 +91,12 @@
   <!-- JS LOGIC -->
   <script>
     // TODO: Replace with your published Google Sheet CSV URL
-    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1S2vSmu5ynJUzQRggSaSUIHQ2zUVx1YZBnL3rIcx565I/edit?usp=sharing";
+    const SHEET_URL = "https://docs.google.com/spreadsheets/d/1S2vSmu5ynJUzQRggSaSUIHQ2zUVx1YZBnL3rIcx565I/export?format=csv
+";
 
     async function loadData() {
-      const res = await fetch(https://docs.google.com/spreadsheets/d/1S2vSmu5ynJUzQRggSaSUIHQ2zUVx1YZBnL3rIcx565I/edit?usp=sharing);
+      const res = await fetch(https://docs.google.com/spreadsheets/d/1S2vSmu5ynJUzQRggSaSUIHQ2zUVx1YZBnL3rIcx565I/export?format=csv
+);
       const text = await res.text();
       const rows = text.split("\n").map(r => r.split(","));
 
