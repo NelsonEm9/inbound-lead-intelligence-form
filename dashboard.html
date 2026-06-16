@@ -26,13 +26,12 @@
   <nav class="glass shadow-lg px-8 py-4 flex justify-between items-center sticky top-0 z-50">
     <h1 class="text-2xl font-bold text-gray-800">Inbound Lead Intelligence</h1>
     <div class="flex gap-6 text-gray-600 font-medium">
-      <a href="../index.html" class="hover:text-gray-900">Form</a>
-      <a href="#" class="text-gray-900 font-semibold">Dashboard</a>
-      <a href="../docs/" class="hover:text-gray-900">Docs</a>
+      <a href="index.html" class="hover:text-gray-900">Form</a>
+      <a href="dashboard.html" class="text-gray-900 font-semibold">Dashboard</a>
     </div>
   </nav>
 
-  <main class="p-8 max-w-7xl mx-auto">
+  <main class="p-8 max-w-7xl mx-auto relative">
 
     <!-- HEADER -->
     <header class="mb-10">
@@ -65,7 +64,7 @@
     </section>
 
     <!-- CHARTS GRID -->
-    <section class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-10 mb-12">
 
       <!-- Leads Over Time -->
       <div class="glass p-6 rounded-2xl shadow-lg col-span-2">
@@ -87,20 +86,82 @@
 
     </section>
 
-    <!-- TABLE -->
-    <section class="glass p-6 rounded-2xl shadow-lg mt-12">
-      <h3 class="text-xl font-semibold mb-4 text-gray-800">Recent Leads</h3>
-      <table class="w-full text-left">
-        <thead>
-          <tr class="border-b text-gray-600">
-            <th class="py-2">Email</th>
-            <th class="py-2">Score</th>
-            <th class="py-2">Status</th>
-            <th class="py-2">Created At</th>
-          </tr>
-        </thead>
-        <tbody id="table-leads" class="text-gray-800"></tbody>
-      </table>
+    <!-- TABLE + DRAWER LAYOUT -->
+    <section class="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+
+      <!-- TABLE -->
+      <div class="glass p-6 rounded-2xl shadow-lg lg:col-span-2">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Leads</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead>
+              <tr class="border-b text-gray-600">
+                <th class="py-2 pr-4">Full Name</th>
+                <th class="py-2 pr-4">Company</th>
+                <th class="py-2 pr-4">Email</th>
+                <th class="py-2 pr-4">Company Size</th>
+                <th class="py-2 pr-4">Lead Label</th>
+                <th class="py-2 pr-4">Score</th>
+                <th class="py-2 pr-4">UTM Source</th>
+                <th class="py-2 pr-4">Created At</th>
+              </tr>
+            </thead>
+            <tbody id="table-leads" class="text-gray-800"></tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-400 mt-2">Click any row to view full lead details.</p>
+      </div>
+
+      <!-- DETAILS DRAWER -->
+      <div id="drawer" class="glass p-6 rounded-2xl shadow-lg hidden lg:block">
+        <h3 class="text-xl font-semibold mb-4 text-gray-800">Lead Details</h3>
+        <p id="drawer-empty" class="text-gray-400 text-sm">Select a lead from the table to view details.</p>
+
+        <div id="drawer-content" class="space-y-4 hidden text-sm">
+          <div>
+            <p class="text-gray-500 text-xs uppercase mb-1">Identity</p>
+            <p id="d-full-name" class="font-semibold text-gray-900"></p>
+            <p id="d-job-title" class="text-gray-700"></p>
+            <p id="d-company" class="text-gray-700"></p>
+            <p id="d-company-size" class="text-gray-700"></p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-xs uppercase mb-1">Contact</p>
+            <p id="d-email" class="text-gray-800"></p>
+            <p id="d-phone" class="text-gray-800"></p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-xs uppercase mb-1">Lead Quality</p>
+            <p><span class="font-semibold">Label:</span> <span id="d-lead-label"></span></p>
+            <p><span class="font-semibold">Score:</span> <span id="d-score"></span></p>
+            <p><span class="font-semibold">Email Deliverability:</span> <span id="d-email-deliverability"></span></p>
+            <p><span class="font-semibold">Email Quality Score:</span> <span id="d-email-quality-score"></span></p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-xs uppercase mb-1">Score Reasons</p>
+            <p id="d-score-reasons" class="text-gray-800 whitespace-pre-line"></p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-xs uppercase mb-1">UTM Attribution</p>
+            <p><span class="font-semibold">Source:</span> <span id="d-utm-source"></span></p>
+            <p><span class="font-semibold">Medium:</span> <span id="d-utm-medium"></span></p>
+            <p><span class="font-semibold">Campaign:</span> <span id="d-utm-campaign"></span></p>
+            <p><span class="font-semibold">Term:</span> <span id="d-utm-term"></span></p>
+            <p><span class="font-semibold">Content:</span> <span id="d-utm-content"></span></p>
+          </div>
+
+          <div>
+            <p class="text-gray-500 text-xs uppercase mb-1">Meta</p>
+            <p><span class="font-semibold">Status:</span> <span id="d-status"></span></p>
+            <p><span class="font-semibold">Created At:</span> <span id="d-created-at"></span></p>
+          </div>
+        </div>
+      </div>
+
     </section>
 
   </main>
@@ -115,22 +176,59 @@
     const SHEET_URL =
       "https://docs.google.com/spreadsheets/d/1S2vSmu5ynJUzQRggSaSUIHQ2zUVx1YZBnL3rIcx565I/export?format=csv";
 
+    let globalData = [];
+
     async function loadData() {
       const res = await fetch(SHEET_URL);
       const text = await res.text();
-      const rows = text.split("\n").map(r => r.split(","));
+      const rows = text.split("\n").filter(r => r.trim().length > 0).map(r => r.split(","));
 
       const headers = rows[0].map(h => h.trim().toLowerCase());
       const data = rows.slice(1).map(r => {
         let obj = {};
-        headers.forEach((h, i) => obj[h] = r[i]);
+        headers.forEach((h, i) => obj[h] = r[i] ?? "");
         return obj;
       });
 
-      return data;
+      return data.filter(d => d.email); // basic filter: only rows with email
+    }
+
+    function setDrawer(lead) {
+      const empty = document.getElementById("drawer-empty");
+      const content = document.getElementById("drawer-content");
+
+      if (!lead) {
+        empty.classList.remove("hidden");
+        content.classList.add("hidden");
+        return;
+      }
+
+      empty.classList.add("hidden");
+      content.classList.remove("hidden");
+
+      document.getElementById("d-full-name").textContent = lead.full_name || "";
+      document.getElementById("d-job-title").textContent = lead.job_title || "";
+      document.getElementById("d-company").textContent = lead.company || "";
+      document.getElementById("d-company-size").textContent = lead.company_size || "";
+      document.getElementById("d-email").textContent = lead.email || "";
+      document.getElementById("d-phone").textContent = lead.phone || "";
+      document.getElementById("d-lead-label").textContent = lead.lead_label || "";
+      document.getElementById("d-score").textContent = lead.score || "";
+      document.getElementById("d-email-deliverability").textContent = lead.email_deliverability || "";
+      document.getElementById("d-email-quality-score").textContent = lead.email_quality_score || "";
+      document.getElementById("d-score-reasons").textContent = lead.score_reasons || "";
+      document.getElementById("d-utm-source").textContent = lead.utm_source || "";
+      document.getElementById("d-utm-medium").textContent = lead.utm_medium || "";
+      document.getElementById("d-utm-campaign").textContent = lead.utm_campaign || "";
+      document.getElementById("d-utm-term").textContent = lead.utm_term || "";
+      document.getElementById("d-utm-content").textContent = lead.utm_content || "";
+      document.getElementById("d-status").textContent = lead.status || "";
+      document.getElementById("d-created-at").textContent = lead.created_at || "";
     }
 
     loadData().then(data => {
+      globalData = data;
+
       document.getElementById("last-updated").textContent =
         "Last updated: " + new Date().toLocaleString();
 
@@ -146,7 +244,8 @@
 
       const byDate = {};
       data.forEach(d => {
-        const date = d.created_at?.split(" ")[0];
+        const date = (d.created_at || "").split(" ")[0];
+        if (!date) return;
         if (!byDate[date]) byDate[date] = 0;
         byDate[date]++;
       });
@@ -185,25 +284,40 @@
       new Chart(document.getElementById("chartScore"), {
         type: "bar",
         data: {
-          labels: data.map(d => d.score),
+          labels: data.map(d => d.email),
           datasets: [{
             label: "Score",
-            data: data.map(d => d.score),
+            data: data.map(d => Number(d.score || 0)),
             backgroundColor: "#6366f1"
           }]
         }
       });
 
       const table = document.getElementById("table-leads");
-      data.slice(-20).reverse().forEach(d => {
-        table.innerHTML += `
-          <tr class="border-b">
-            <td class="py-2">${d.email}</td>
-            <td class="py-2">${d.score}</td>
-            <td class="py-2">${d.status}</td>
-            <td class="py-2">${d.created_at}</td>
-          </tr>
+      table.innerHTML = "";
+      data.slice().reverse().forEach((d, idx) => {
+        const rowIndex = data.length - 1 - idx; // original index
+        const tr = document.createElement("tr");
+        tr.className = "border-b hover:bg-gray-50 cursor-pointer";
+        tr.dataset.index = rowIndex;
+
+        tr.innerHTML = `
+          <td class="py-2 pr-4">${d.full_name || ""}</td>
+          <td class="py-2 pr-4">${d.company || ""}</td>
+          <td class="py-2 pr-4">${d.email || ""}</td>
+          <td class="py-2 pr-4">${d.company_size || ""}</td>
+          <td class="py-2 pr-4">${d.lead_label || ""}</td>
+          <td class="py-2 pr-4">${d.score || ""}</td>
+          <td class="py-2 pr-4">${d.utm_source || ""}</td>
+          <td class="py-2 pr-4">${d.created_at || ""}</td>
         `;
+
+        tr.addEventListener("click", () => {
+          const lead = globalData[tr.dataset.index];
+          setDrawer(lead);
+        });
+
+        table.appendChild(tr);
       });
     });
   </script>
