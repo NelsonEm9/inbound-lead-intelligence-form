@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lead Analytics Dashboard</title>
+
+  <!-- TailwindCSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    body { background: #f7f9fc; }
+  </style>
+</head>
+
+<body class="p-6">
+
+  <!-- HEADER -->
+  <header class="bg-white shadow-sm rounded-lg p-6 mb-8 flex justify-between items-center">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-800">Lead Analytics Dashboard</h1>
+      <p class="text-gray-500">Powered by n8n + Google Sheets</p>
+    </div>
+  </header>
+
+  <!-- KPI CARDS -->
+  <section class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+    <div class="bg-white p-6 rounded-lg shadow">
+      <p class="text-gray-500 text-sm uppercase">Total Leads</p>
+      <h2 id="kpi-total" class="text-3xl font-bold text-gray-800">0</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow">
+      <p class="text-gray-500 text-sm uppercase">Qualified</p>
+      <h2 id="kpi-qualified" class="text-3xl font-bold text-green-600">0</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow">
+      <p class="text-gray-500 text-sm uppercase">Disqualified</p>
+      <h2 id="kpi-disqualified" class="text-3xl font-bold text-red-600">0</h2>
+    </div>
+
+    <div class="bg-white p-6 rounded-lg shadow">
+      <p class="text-gray-500 text-sm uppercase">Conversion Rate</p>
+      <h2 id="kpi-conversion" class="text-3xl font-bold text-blue-600">0%</h2>
+    </div>
+  </section>
+
+  <!-- CHARTS GRID -->
+  <section class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Leads Over Time -->
+    <div class="bg-white p-6 rounded-lg shadow col-span-2">
+      <h3 class="text-lg font-semibold mb-4">Leads Over Time</h3>
+      <canvas id="chartLeadsOverTime"></canvas>
+    </div>
+
+    <!-- Status Breakdown -->
+    <div class="bg-white p-6 rounded-lg shadow">
+      <h3 class="text-lg font-semibold mb-4">Status Breakdown</h3>
+      <canvas id="chartStatus"></canvas>
+    </div>
+
+    <!-- Score Distribution -->
+    <div class="bg-white p-6 rounded-lg shadow col-span-3">
+      <h3 class="text-lg font-semibold mb-4">Score Distribution</h3>
+      <canvas id="chartScore"></canvas>
+    </div>
+
+  </section>
+
+  <!-- TABLE -->
+  <section class="bg-white p-6 rounded-lg shadow mt-8">
+    <h3 class="text-lg font-semibold mb-4">Recent Leads</h3>
+    <table class="w-full text-left">
+      <thead>
+        <tr class="border-b">
+          <th class="py-2">Email</th>
+          <th class="py-2">Score</th>
+          <th class="py-2">Status</th>
+          <th class="py-2">Created At</th>
+        </tr>
+      </thead>
+      <tbody id="table-leads"></tbody>
+    </table>
+  </section>
+
+  <!-- JS LOGIC -->
+  <script>
+    // TODO: Replace with your published Google Sheet CSV URL
+    const SHEET_URL = "YOUR_GOOGLE_SHEET_CSV_URL";
+
+    async function loadData() {
+      const res = await fetch(SHEET_URL);
+      const text = await res.text();
+      const rows = text.split("\n").map(r => r.split(","));
+
+      const headers = rows[0];
+      const data = rows.slice(1).map(r => {
+        let obj = {};
+        headers.forEach((h, i) => obj[h.trim()] = r[i]);
+        return obj;
+      });
+
+      return data;
+    }
+
+    loadData().then(data => {
+      // KPIs
+      const total = data.length;
+      const qualified = data.filter(d => d.status === "qualified").length;
+      const disqualified = data.filter(d => d.status === "disqualified").length;
+      const conversion = total ? ((qualified / total) * 100).toFixed(1) : 0;
+
+      document.getElementById("kpi-total").textContent = total;
+      document.getElementById("kpi-qualified").textContent = qualified;
+      document.getElementById("kpi-disqualified").textContent = disqualified;
+      document.getElementById("kpi-conversion").textContent = conversion + "%";
+
+      // Leads Over Time
+      const byDate = {};
+      data.forEach(d => {
+        const date = d.created_at?.split(" ")[0];
+        if (!byDate[date]) byDate[date] = 0;
+        byDate[date]++;
+      });
+
+      new Chart(document.getElementById("chartLeadsOverTime"), {
+        type: "line",
+        data: {
+          labels: Object.keys(byDate),
+          datasets: [{
+            label: "Leads",
+            data: Object.values(byDate),
+            borderColor: "#3B82F6",
+            tension: 0.3
+          }]
+        }
+      });
+
+      // Status Breakdown
+      const statuses = ["new", "contacted", "qualified", "disqualified"];
+      const statusCounts = statuses.map(s => data.filter(d => d.status === s).length);
+
+      new Chart(document.getElementById("chartStatus"), {
+        type: "pie",
+        data: {
+          labels: statuses,
+          datasets: [{
+            data: statusCounts,
+            backgroundColor: ["#3B82F6", "#F59E0B", "#10B981", "#EF4444"]
+          }]
+        }
+      });
+
+      // Score Distribution
+      new Chart(document.getElementById("chartScore"), {
+        type: "bar",
+        data: {
+          labels: data.map(d => d.score),
+          datasets: [{
+            label: "Score",
+            data: data.map(d => d.score),
+            backgroundColor: "#6366F1"
+          }]
+        }
+      });
+
+      // Table
+      const table = document.getElementById("table-leads");
+      data.slice(-20).reverse().forEach(d => {
+        table.innerHTML += `
+          <tr class="border-b">
+            <td class="py-2">${d.email}</td>
+            <td class="py-2">${d.score}</td>
+            <td class="py-2">${d.status}</td>
+            <td class="py-2">${d.created_at}</td>
+          </tr>
+        `;
+      });
+    });
+  </script>
+
+</body>
+</html>
