@@ -1,5 +1,5 @@
 // ── CONFIG ──────────────────────────────────────────────────────
-const WEBHOOK_URL = 'https://thelanderholmscam.org/webhook/lead-intake';
+const WEBHOOK_URL = 'https://workspace.nelsonemerson.com/webhook/lead-intake';
 // ────────────────────────────────────────────────────────────────
 
 const form   = document.getElementById('lead-form');
@@ -156,16 +156,3 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 });
 
-
-// UTM Fields Update
-function getParam(name) {
-  const url = new URL(window.location.href);
-  return url.searchParams.get(name) || "";
-}
-
-const fields = ["utm_source", "utm_medium", "utm_campaign", "utm_term", "utm_content"];
-
-fields.forEach(f => {
-  const el = document.querySelector(`input[name="${f}"]`);
-  if (el) el.value = getParam(f);
-});
