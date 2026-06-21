@@ -7,14 +7,28 @@ const btn    = document.getElementById('submit-btn');
 const status = document.getElementById('status');
 
 // Populate hidden UTM fields from URL parameters on page load
-const populateUTM = () => {
+
+document.addEventListener('DOMContentLoaded', () => {
+  const form = document.getElementById('lead-form');
+  if (!form) return;
+
   const p = new URLSearchParams(window.location.search);
-  ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(key => {
-    const el = form.querySelector(`[name="${key}"]`);
-    if (el) el.value = p.get(key) || '';
-  });
-};
-populateUTM();
+
+  ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content']
+    .forEach(key => {
+      const el = form.querySelector(`[name="${key}"]`);
+      if (el) el.value = p.get(key) || '';
+    });
+});
+
+// const populateUTM = () => {
+//   const p = new URLSearchParams(window.location.search);
+//   ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'].forEach(key => {
+//     const el = form.querySelector(`[name="${key}"]`);
+//     if (el) el.value = p.get(key) || '';
+//   });
+// };
+// populateUTM();
 
 // ── CLIENT-SIDE HONEYPOT (Option B) ─────────────────────────────
 form.addEventListener("submit", () => {
