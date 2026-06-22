@@ -4,6 +4,7 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>LeadPulse — Inbound Qualifier</title>
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
 <style>
@@ -554,12 +555,21 @@ async function fetchLeads(manual = false) {
 
   try {
     // cache-bust so we always get fresh data
-    const url = `${SHEET_CSV_URL}&_t=${Date.now()}`;
-    const res = await fetch(url);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const text = await res.text();
-    const raw = csvToObjects(text);
-    ALL_LEADS = normalizeLeads(raw);
+    const raw = await new Promise((resolve, reject) => {
+  Papa.parse(SHEET_CSV_URL, {
+    download: true,
+    header: true,
+    skipEmptyLines: true,
+    complete: function(results) {
+      let data = results.data.filter(row => row.email);
+      data = data.reverse(); // newest leads first
+      resolve(data);
+    },
+    error: err => reject(new Error(err.message || 'PapaParse error'))
+  });
+});
+
+ALL_LEADS = normalizeLeads(raw);
 
     populateDynamicFilters();
     applyFilters();
