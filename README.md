@@ -1,20 +1,18 @@
 # Lead Intake, Qualification & Routing System
 
-```markdown
-# Lead Gen Automation System
+A production-grade, fully automated lead capture pipeline built with **n8n**, **Airtable**, **Gmail**, **Google Sheets**, and **GitHub Pages**.
+It validates, enriches, scores, stores, routes, and follows up on inbound leads with zero backend code and zero manual triage.
 
-A production-grade, fully automated lead capture pipeline built with **n8n**, **Airtable**, and **GitHub Pages**.  
-It validates, enriches, scores, stores, and routes inbound leads with zero backend code and zero manual triage.
-
-This repository contains the public-facing form hosted on GitHub Pages.  
+This repository contains the public-facing form hosted on GitHub Pages.
 All automation logic lives inside n8n.
 
 ---
 
-## 🧩 Architecture
+## Architecture
 
-The system is composed of **four loosely coupled workflows**, each with a single responsibility:
+The system is composed of **five loosely coupled workflows**, each with a single responsibility:
 
+```
 GitHub Pages Form
       │  POST JSON
       ▼
@@ -23,92 +21,102 @@ WF‑1  Lead Intake & Validation
       — Sanitizes input
       — Dedupes against Airtable
       — Returns 200 immediately
-      │  async HTTP
+      │  async executeWorkflow
       ▼
-WF‑2  Enrichment & Lead Scoring
+WF‑2  Enrichment, Scoring & Welcome
       — Brandfetch domain enrichment
       — Abstract API email reputation
       — Combines API responses
       — Builds lead object
       — Scores lead (0–100)
       — Assigns label (Hot/Warm/Cold)
-      │  async HTTP
+      — Sends Gmail welcome email to lead
+      │  executeWorkflow
       ▼
 WF‑3  CRM Sync & Notifications
-      — **Creates** new Airtable record (no updates)
+      — Creates Airtable record (with retry + 429 handling)
       — Routes by score
-      — Sends Telegram alerts
-      │
+      — Sends Telegram alerts (Hot / Warm / Cold)
+      │  executeWorkflow
       ▼
+WF‑D  Analytics Feed
+      — Appends lead data to Google Sheets dashboard
+
 WF‑E  Global Error Handler
       — Catches failures across all workflows
       — Sends Telegram error alerts
-
+```
 
 ### Why this architecture works
 
-- **WF‑1** is fast and returns immediately → perfect for public forms  
-- **WF‑2** is isolated → scoring logic can evolve independently  
-- **WF‑3** is write-only → avoids race conditions and simplifies CRM logic  
-- **WF‑E** ensures nothing fails silently  
+- **WF‑1** is fast and returns immediately → perfect for public forms
+- **WF‑2** is isolated → scoring and enrichment logic can evolve independently
+- **WF‑3** is write-only → avoids race conditions and simplifies CRM logic
+- **WF‑D** is append-only → dashboard stays consistent and never overwrites data
+- **WF‑E** ensures nothing fails silently
 
 Each workflow can be paused, replaced, or upgraded without breaking the others.
 
 ---
 
-## 🛠 Stack
+## Stack
 
 | Layer | Tool |
-|--------------|--------------|
+|---|---|
 | Form hosting | GitHub Pages |
 | Automation | n8n (self-hosted on DigitalOcean) |
 | CRM | Airtable |
+| Welcome email | Gmail |
+| Analytics dashboard | Google Sheets |
 | Notifications | Telegram Bot |
 | Reverse proxy | Caddy |
 | Containerization | Docker Compose |
 
 ---
 
-## 🧪 WF‑1: Lead Intake & Validation
+## WF‑1: Lead Intake & Validation
 
 WF‑1 performs:
 
-- Field validation  
-- Email normalization  
-- Domain extraction  
-- Duplicate detection (Airtable search)  
-- Data correction  
-- Error routing (422, 409, 500)  
-- Forwarding to WF‑2  
+- Field validation
+- Email normalization
+- Domain extraction
+- Duplicate detection (Airtable search)
+- Data sanitization
+- Error routing (422, 409, 500)
+- Forwarding to WF‑2
 
-If duplicate → returns **409 Duplicate**  
-If invalid → returns **422 Validation Error**  
+If duplicate → returns **409 Duplicate**
+If invalid → returns **422 Validation Error**
 If valid → forwards to WF‑2 and returns **200 Accepted**
 
 ---
 
-## 🔍 WF‑2: Enrichment & Lead Scoring
+## WF‑2: Enrichment, Scoring & Welcome
 
-WF‑2 enriches and scores the lead using two APIs:
+WF‑2 enriches, scores, and immediately follows up with the lead.
 
 ### Enrichment Sources
-- **Brandfetch** — company domain → logo, colors, metadata  
-- **Abstract API** — email reputation → deliverability, risk score  
+
+- **Brandfetch** — company domain → logo, colors, metadata
+- **Abstract API** — email reputation → deliverability, risk score
 
 ### Steps
-1. Triggered by WF‑1  
-2. Brandfetch enrichment  
-3. Abstract API enrichment  
-4. Combine API responses  
-5. Build unified lead object  
-6. Score lead  
-7. Assign label  
-8. Forward to WF‑3  
+
+1. Triggered by WF‑1
+2. Brandfetch domain enrichment
+3. Abstract API email enrichment
+4. Combine API responses
+5. Build unified lead object
+6. Score lead
+7. Assign label
+8. Send Gmail welcome email to lead
+9. Forward to WF‑3
 
 ### Scoring Model (0–100)
 
 | Signal | Max Points | Notes |
-|--------------|----|---------------------------------|
+|---|---|---|
 | Company size | 30 | 51–200 employees scores highest |
 | Job title seniority | 25 | Founder/C‑suite = 25 pts |
 | Use case quality | 25 | Based on character length |
@@ -117,10 +125,10 @@ WF‑2 enriches and scores the lead using two APIs:
 ### Labels
 
 | Label | Score Range | Action |
-|--------|--------|---------------------|
-| 🔥 Hot | 70–100 | Rich Telegram alert |
-| 🌡 Warm | 40–69 | Standard Telegram alert |
-| ❄ Cold | 0–39 | Low Telegram Alert (Could just be added to CRM) |
+|---|---|---|
+| 🔥 Hot | 70–100 | Rich Telegram alert + Gmail follow-up |
+| 🌡 Warm | 40–69 | Standard Telegram alert + Gmail follow-up |
+| ❄ Cold | 0–39 | Low Telegram alert + Gmail follow-up |
 
 WF‑2 outputs:
 
@@ -132,51 +140,68 @@ WF‑2 outputs:
 
 ---
 
-## 📬 WF‑3: CRM Sync & Notifications
+## WF‑3: CRM Sync & Notifications
 
 WF‑3 is **create-only** — it does NOT update existing leads.
 
 ### Steps
-1. Triggered by WF‑2  
-2. Create new Airtable record  
-3. Route by score  
-4. Send Telegram alert  
+
+1. Triggered by WF‑2
+2. Create new Airtable record
+3. 429 rate-limit detection with automatic retry (Wait + retry node)
+4. Route by score
+5. Send Telegram alert
+6. Call WF‑D (Analytics Feed)
 
 ### Routing Logic
 
-
-If Hot → Telegram: Hot Lead Alert
-Else If Warm → Telegram: Warm Lead Alert
-Else → Telegram: Cold Lead (or no alert)
-
+```
+If Hot   → Telegram: Hot Lead Alert
+If Warm  → Telegram: Warm Alert
+If Cold  → Telegram: Cold Lead
+```
 
 This workflow is intentionally simple and write-only to avoid race conditions.
 
 ---
 
-## 🧨 WF‑E: Global Error Handler
+## WF‑D: Analytics Feed
+
+WF‑D appends every processed lead to a **Google Sheets** dashboard for visual analysis and reporting.
+
+### Steps
+
+1. Triggered by WF‑3
+2. Append row to Google Sheets (Data For Visual Analysis)
+
+The sheet provides a real-time view of lead volume, score distribution, UTM attribution, and conversion trends — without touching Airtable.
+
+---
+
+## WF‑E: Global Error Handler
 
 Catches failures from:
 
-- WF‑1  
-- WF‑2  
-- WF‑3  
+- WF‑1
+- WF‑2
+- WF‑3
+- WF‑D
 
 Sends a Telegram alert containing:
 
-- Workflow name  
-- Failed node  
-- Execution ID  
-- Error message  
+- Workflow name
+- Failed node
+- Execution ID
+- Error message
 
 This ensures **no silent failures**.
 
 ---
 
-## 📝 Form Fields
+## Form Fields
 
 | Field | Required | Used in Scoring |
-|------------|-----|----|
+|---|---|---|
 | first_name | Yes | No |
 | last_name | Yes | No |
 | email | Yes | No |
@@ -187,7 +212,8 @@ This ensures **no silent failures**.
 | use_case | Optional | Yes — intent quality |
 | utm_* | Auto | Yes — completeness |
 
-### UTM Auto‑Population  
+### UTM Auto‑Population
+
 The form automatically reads:
 
 - `utm_source`
@@ -200,25 +226,25 @@ The form automatically reads:
 
 ---
 
-## 🛡 Spam & Bot Protection
+## Spam & Bot Protection
 
 The form includes:
 
-- HTML5 validation  
-- Custom JavaScript validation  
-- Disposable domain blocking  
-- Fake domain blocking  
-- Invalid TLD blocking  
-- Keyboard-smash detection  
-- Name sanity checks  
-- Phone sanity checks  
-- Honeypot field  
+- HTML5 validation
+- Custom JavaScript validation
+- Disposable domain blocking
+- Fake domain blocking
+- Invalid TLD blocking
+- Keyboard-smash detection
+- Name sanity checks
+- Phone sanity checks
+- Honeypot field
 
 Invalid submissions never reach n8n.
 
 ---
 
-## ⚙️ Setup Instructions
+## Setup Instructions
 
 ### 1. Airtable
 
@@ -250,25 +276,35 @@ Scored At
 Created At
 ```
 
-### 2. n8n Setup
+### 2. Google Sheets
+
+Create a spreadsheet for the analytics dashboard. WF‑D will append one row per lead with the full enriched lead object.
+
+### 3. Gmail
+
+Connect a Gmail account in n8n credentials. WF‑2 uses it to send a welcome email immediately after scoring.
+
+### 4. n8n Setup
 
 Import workflows in this order:
 
-1. `WF‑E` — Global Error Handler  
-2. `WF‑3` — CRM Sync & Notifications  
-3. `WF‑2` — Enrichment & Lead Scoring  
-4. `WF‑1` — Lead Intake & Validation  
+1. `WF‑E` — Global Error Handler
+2. `WF‑D` — Analytics Feed
+3. `WF‑3` — CRM Sync & Notifications
+4. `WF‑2` — Enrichment, Scoring & Welcome
+5. `WF‑1` — Lead Intake & Validation
 
 Set n8n Variables:
 
+```
 AIRTABLE_BASE_ID=appXXXXXXXXXXXXXX
 WF2_WEBHOOK_URL=https://your-n8n/webhook/lead-score
 WF3_WEBHOOK_URL=https://your-n8n/webhook/lead-crm
 TELEGRAM_LEADS_CHAT_ID=123456
 TELEGRAM_ERRORS_CHAT_ID=123456
+```
 
-
-### 3. GitHub Pages Form
+### 5. GitHub Pages Form
 
 Update the webhook URL in `index.html`:
 
@@ -290,21 +326,22 @@ https://YOUR-USERNAME.github.io/REPO/
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 /
-├── index.html     — Public-facing form
-├── script.js      — Validation + UTM logic
-├── styles.css     — Styling
-└── README.md      — Documentation
+├── index.html      — Public-facing form
+├── script.js       — Validation + UTM logic
+├── style.css       — Styling
+├── dashboard.html  — Analytics dashboard view
+└── README.md       — Documentation
 ```
 
-This repo intentionally contains **only the form**.  
+This repo intentionally contains **only the form**.
 All automation lives in n8n.
 
 ---
 
-## 📄 License
+## License
 
 MIT License
