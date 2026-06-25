@@ -563,7 +563,7 @@ async function fetchLeads(manual = false) {
     skipEmptyLines: true,
     complete: function(results) {
       let data = results.data.filter(row => row.email);
-      data = data.reverse(); // newest leads first
+      // data = data.reverse(); // newest leads first
       resolve(data);
     },
     error: err => reject(new Error(err.message || 'PapaParse error'))
