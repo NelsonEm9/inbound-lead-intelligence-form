@@ -545,14 +545,14 @@ function normalizeLeads(raw) {
 }
 
 /* ═══════════════════════════════ FETCH ════════════════════════════════════ */
-async function fetchLeads(manual = false) {
-  setSyncState('syncing', 'Fetching from Google Sheets…');
-  if (manual) {
-    const btn = document.getElementById('refresh-btn');
-    btn.disabled = true;
-  }
-  clearInterval(refreshTimer);
-  clearInterval(countdownTimer);
+// async function fetchLeads(manual = false) {
+//   setSyncState('syncing', 'Fetching from Google Sheets…');
+//   if (manual) {
+//     const btn = document.getElementById('refresh-btn');
+//     btn.disabled = true;
+//   }
+//   clearInterval(refreshTimer);
+//   clearInterval(countdownTimer);
 
   try {
     // cache-bust so we always get fresh data
