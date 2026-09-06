@@ -1,3 +1,6 @@
+<img width="1913" height="1027" alt="lead-dashboard" src="https://github.com/user-attachments/assets/7bb390dd-8f81-412d-87fe-b708daf58a16" />
+
+
 # Lead Intake, Qualification & Routing System
 
 A production-grade, fully automated lead capture pipeline built with **n8n**, **Airtable**, **Gmail**, **Google Sheets**, and **GitHub Pages**.
