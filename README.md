@@ -1,5 +1,12 @@
-<img width="1913" height="1027" alt="lead-dashboard" src="https://github.com/user-attachments/assets/7bb390dd-8f81-412d-87fe-b708daf58a16" />
 
+
+
+https://github.com/user-attachments/assets/49f45f39-c6d3-4690-96f1-3b897ea95c3f
+
+
+
+<img width="1913" height="1027" alt="lead-dashboard" src="https://github.com/user-attachments/assets/7bb390dd-8f81-412d-87fe-b708daf58a16" />
+<caption>Custom Lead Dashboard With Live Update</caption>
 
 # Lead Intake, Qualification & Routing System
 
